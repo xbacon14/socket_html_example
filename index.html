@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket.IO Test</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"
+    integrity="sha512-MVIvu+RrRZ8i4gxYMF/87ww/ErVLaW+O1lMHUpNTn0lW5NVXhxALXkQ1vnQbzpalm5eXVhzSmF7Rzf7JVoBhTQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    #kanban-board {
+      height: 88vh;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <h2>Lectura en tiempo real de los equipos</h2>
+      </div>
+    </div>
+    <div class="row" id="kanban-board">
+      <!-- Cards will be dynamically added here -->
+    </div>
+    <footer class="bg-body-tertiary text-center text-lg-start">
+      <!-- Copyright -->
+      <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.05);">
+      Desarrollado por Exo
+      </div>
+      <!-- Copyright -->
+    </footer>
+  </div>
+
+
+
+  <!-- Bootstrap JS and jQuery (required for Bootstrap) -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- SOCKET CONFIG -->
+  <script>
+    const socketBaseUrl = "http://localhost:8088";
+    const username = "CLIENT";
+    const room = "MONITOR";
+
+    let socket;
+    let socketResponse = {
+      room: "",
+      message: "",
+      username: "",
+      messageType: "",
+      createdAt: ""
+    };
+    let isConnected = false;
+
+    function connectSocket() {
+      socket = io(socketBaseUrl, {
+        query: `username=${username}&room=${room}`
+      });
+
+      socket.on("connect", () => {
+        isConnected = true;
+        console.log(`Connected with socket id: ${socket.id}`);
+      });
+
+      socket.on("connect_error", (error) => {
+        console.error("SOCKET CONNECTION ERROR", error);
+      });
+
+      socket.on("UPDATE_MONITOR", (res) => {
+        renderKanbanBoard(res);
+        // socketResponse = {
+        //   room: res.room,
+        //   message: res.message,
+        //   username: res.username,
+        //   messageType: res.messageType,
+        //   createdAt: res.createdAt
+        // };
+      });
+    }
+
+    function sendData(payload) {
+      if (socket) {
+        socket.emit("send_message", {
+          room: room,
+          message: payload.message,
+          username: username,
+          messageType: "CLIENT"
+        });
+      } else {
+        console.error("Socket is not connected");
+      }
+    }
+
+    // Connect to the socket when the script is loaded
+    connectSocket();
+
+    // Example of sending a message
+    setTimeout(() => {
+      sendData({ message: "Hello, world!" });
+    }, 2000);
+
+    // Disconnect from the socket when the window is closed
+    window.addEventListener("beforeunload", () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    });
+
+    // HANDLER DE DRAG
+    function handleDragStart(event) {
+      event.dataTransfer.setData("text/plain", event.target.id);
+    }
+
+    function handleDrop(event) {
+      event.preventDefault();
+      const data = event.dataTransfer.getData("text/plain");
+      const draggedCard = document.getElementById(data);
+      const dropzone = event.target.closest(".dropzone");
+      dropzone.appendChild(draggedCard);
+    }
+
+    function handleDragOver(event) {
+      event.preventDefault();
+    }
+
+    const cards = document.querySelectorAll(".card");
+    cards.forEach(card => {
+      card.addEventListener("dragstart", handleDragStart);
+    });
+
+    const dropzones = document.querySelectorAll(".dropzone");
+    dropzones.forEach(dropzone => {
+      dropzone.addEventListener("dragover", handleDragOver);
+      dropzone.addEventListener("drop", handleDrop);
+    });
+
+
+    // HIGHLIGHT HANDLER
+    function highlightMatchingTags(clickedTag) {
+      const allTags = document.querySelectorAll('.list-group-item');
+
+      // Clear previous highlighting (optional)
+      allTags.forEach(tag => tag.classList.remove('highlight'));
+
+      // Highlight matching tags
+      allTags.forEach(tag => {
+        if (tag.textContent.trim() === clickedTag.textContent.trim()) {
+          tag.classList.add('highlight');
+        }
+      });
+      // Event listener for tag clicks
+      const tagList = document.querySelector('.card-body ul');
+      tagList.addEventListener('click', event => {
+        if (event.target.tagName === 'LI') {
+          const clickedTag = event.target;
+          highlightMatchingTags(clickedTag);
+        }
+      });
+    }
+
+    var dataFromServer;
+    function renderKanbanBoard(data) {
+      const kanbanBoard = document.getElementById("kanban-board");
+      kanbanBoard.innerHTML = ""; // Clear previous content
+
+      for (const deviceName in data) {
+        const card = document.createElement("div");
+        card.classList.add("col-md-4");
+        card.innerHTML = `
+      <div class="card" draggable="true">
+        <div class="card-header">
+          ${data[deviceName].deviceName} en ${data[deviceName].locationName}
+        </div>
+        <div class="card-body">
+          <ul class="list-group">
+            ${data[deviceName].tags.map(tag => `<li class="list-group-item">${tag}</li>`).join("")}
+          </ul>
+        </div>
+      </div>
+    `;
+        kanbanBoard.appendChild(card);
+      }
+    }
+
+
+    // Renderizar el kanban board con los datos recibidos
+    renderKanbanBoard(dataFromServer);
+  </script>
+</body>
+
+</html>
