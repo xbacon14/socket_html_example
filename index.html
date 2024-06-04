@@ -26,12 +26,10 @@
     <div class="row" id="kanban-board">
       <!-- Cards will be dynamically added here -->
     </div>
-    <footer class="bg-body-tertiary text-center text-lg-start">
-      <!-- Copyright -->
-      <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.05);">
+    <!-- <footer class="bg-body-tertiary text-center text-lg-start">
       Desarrollado por Exo
-      </div>
-      <!-- Copyright -->
+      </div> -->
+    <!-- Copyright -->
     </footer>
   </div>
 
@@ -170,7 +168,7 @@
 
       for (const deviceName in data) {
         const card = document.createElement("div");
-        card.classList.add("col-md-4");
+        card.classList.add("col-sm-4");
         card.innerHTML = `
       <div class="card" draggable="true">
         <div class="card-header">
