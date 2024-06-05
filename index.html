@@ -4,12 +4,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Socket.IO Test</title>
+  <title>Exo-RFID Reader</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"
     integrity="sha512-MVIvu+RrRZ8i4gxYMF/87ww/ErVLaW+O1lMHUpNTn0lW5NVXhxALXkQ1vnQbzpalm5eXVhzSmF7Rzf7JVoBhTQ=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    body {
+      background-color: #f5f5f5;
+    }
+
     #kanban-board {
       height: 88vh;
     }
@@ -71,13 +75,6 @@
 
       socket.on("UPDATE_MONITOR", (res) => {
         renderKanbanBoard(res);
-        // socketResponse = {
-        //   room: res.room,
-        //   message: res.message,
-        //   username: res.username,
-        //   messageType: res.messageType,
-        //   createdAt: res.createdAt
-        // };
       });
     }
 
@@ -109,57 +106,6 @@
       }
     });
 
-    // HANDLER DE DRAG
-    function handleDragStart(event) {
-      event.dataTransfer.setData("text/plain", event.target.id);
-    }
-
-    function handleDrop(event) {
-      event.preventDefault();
-      const data = event.dataTransfer.getData("text/plain");
-      const draggedCard = document.getElementById(data);
-      const dropzone = event.target.closest(".dropzone");
-      dropzone.appendChild(draggedCard);
-    }
-
-    function handleDragOver(event) {
-      event.preventDefault();
-    }
-
-    const cards = document.querySelectorAll(".card");
-    cards.forEach(card => {
-      card.addEventListener("dragstart", handleDragStart);
-    });
-
-    const dropzones = document.querySelectorAll(".dropzone");
-    dropzones.forEach(dropzone => {
-      dropzone.addEventListener("dragover", handleDragOver);
-      dropzone.addEventListener("drop", handleDrop);
-    });
-
-
-    // HIGHLIGHT HANDLER
-    function highlightMatchingTags(clickedTag) {
-      const allTags = document.querySelectorAll('.list-group-item');
-
-      // Clear previous highlighting (optional)
-      allTags.forEach(tag => tag.classList.remove('highlight'));
-
-      // Highlight matching tags
-      allTags.forEach(tag => {
-        if (tag.textContent.trim() === clickedTag.textContent.trim()) {
-          tag.classList.add('highlight');
-        }
-      });
-      // Event listener for tag clicks
-      const tagList = document.querySelector('.card-body ul');
-      tagList.addEventListener('click', event => {
-        if (event.target.tagName === 'LI') {
-          const clickedTag = event.target;
-          highlightMatchingTags(clickedTag);
-        }
-      });
-    }
 
     var dataFromServer;
     function renderKanbanBoard(data) {
@@ -170,7 +116,7 @@
         const card = document.createElement("div");
         card.classList.add("col-sm-4");
         card.innerHTML = `
-      <div class="card" draggable="true">
+      <div class="card" >
         <div class="card-header">
           ${data[deviceName].deviceName} en ${data[deviceName].locationName}
         </div>
